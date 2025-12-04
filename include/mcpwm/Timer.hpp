@@ -13,6 +13,7 @@
 
 #include <functional>
 #include <memory>
+#include <vector>
 
 namespace esp {
     namespace mcpwm {
@@ -66,6 +67,8 @@ namespace esp {
 
             OperatorPtr addOperator(const OperatorConfig& config, esp_err_t& err);
 
+            void removeOperator(const OperatorPtr& oper);
+
             void setEventCallbacks(const EventCallbacks& eventCallbacks, esp_err_t& err);
 
             void enable(esp_err_t& err);
@@ -79,6 +82,8 @@ namespace esp {
 
             TimerConfig _config;
             mcpwm_timer_handle_t _timer;
+
+            std::vector<OperatorPtr> _operators;
 
             bool _enabled = false;
 

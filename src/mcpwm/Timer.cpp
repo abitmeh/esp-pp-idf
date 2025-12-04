@@ -74,7 +74,14 @@ OperatorPtr Timer::addOperator(const OperatorConfig& config, esp_err_t& err) {
         ESP_LOGE(_loggingTag, "mcpwm::Operator::Operator failed: %s", esp_err_to_name(err));
         return nullptr;
     }
+
+    _operators.push_back(result);
+
     return result;
+}
+
+void Timer::removeOperator(const OperatorPtr& oper) {
+    std::erase(_operators, oper);
 }
 
 void Timer::setEventCallbacks(const EventCallbacks& eventCallbacks, esp_err_t& err) {

@@ -54,7 +54,7 @@ namespace esp {
 
             mcpwm_gen_handle_t _generator;
 
-            OperatorPtr _operator;
+            std::weak_ptr<Operator> _operator;
 
             static constexpr char _loggingTag[] = "esp::mcpwm::Generator";
 

@@ -42,7 +42,7 @@ namespace esp {
             mcpwm_cmpr_handle_t _comparator;
             uint32_t _compareValue = 0;
 
-            OperatorPtr _operator;
+            std::weak_ptr<Operator> _operator;
 
             static constexpr char _loggingTag[] = "esp::mcpwm::Comparator";
 

@@ -13,11 +13,13 @@
 
 #include <esp_log.h>
 
+#include <vector>
+
 using namespace esp;
 using namespace mcpwm;
 
 Operator::Operator(TimerPtr timer, const OperatorConfig& config, esp_err_t& err) : _timer(timer) {
-    const mcpwm_operator_config_t operatorConfig = {.group_id = _timer->_config.groupId,
+    const mcpwm_operator_config_t operatorConfig = {.group_id = timer->_config.groupId,
                                                     .intr_priority = config.interuptPriority,
                                                     .flags{
                                                         .update_gen_action_on_tez = config.updateGeneratorActionOnTimerZero,
@@ -61,6 +63,7 @@ ComparatorPtr Operator::addComparator(const ComparatorConfig& config, esp_err_t&
         ESP_LOGE(_loggingTag, "mcpwm::Comparator::Comparator failed: %s", esp_err_to_name(err));
         return nullptr;
     }
+    _comparators.push_back(comparator);
 
     return comparator;
 }
@@ -77,6 +80,15 @@ GeneratorPtr Operator::addGenerator(const GeneratorConfig& config, esp_err_t& er
         ESP_LOGE(_loggingTag, "mcpwm::Generator::Generator failed: %s", esp_err_to_name(err));
         return nullptr;
     }
+    _generators.push_back(generator);
 
     return generator;
+}
+
+void Operator::removeComparator(const ComparatorPtr& comparator) {
+    std::erase(_comparators, comparator);
+}
+
+void Operator::removeGenerator(const GeneratorPtr& generator) {
+    std::erase(_generators, generator);
 }

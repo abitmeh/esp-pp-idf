@@ -12,6 +12,7 @@
 #include <driver/mcpwm_oper.h>
 
 #include <memory>
+#include <vector>
 
 namespace esp {
     namespace mcpwm {
@@ -44,12 +45,17 @@ namespace esp {
             ComparatorPtr addComparator(const ComparatorConfig& config, esp_err_t& err);
             GeneratorPtr addGenerator(const GeneratorConfig& config, esp_err_t& err);
 
+            void removeComparator(const ComparatorPtr& comparator);
+            void removeGenerator(const GeneratorPtr& generator);
+
         private:
             Operator(TimerPtr timer, const OperatorConfig& config, esp_err_t& err);
 
             mcpwm_oper_handle_t _operator;
 
-            TimerPtr _timer;
+            std::weak_ptr<Timer> _timer;
+            std::vector<GeneratorPtr> _generators;
+            std::vector<ComparatorPtr> _comparators;
 
             static constexpr char _loggingTag[] = "esp::mcpwm::Operator";
 
