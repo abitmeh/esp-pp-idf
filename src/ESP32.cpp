@@ -7,10 +7,6 @@
 
 #include "ESP32.hpp"
 
-#if defined(CONFIG_IDF_TARGET_ESP32S3) && CONFIG_IDF_TARGET_ESP32S3
-#include "ESP32S3.hpp"
-#endif
-
 #include "mcpwm/MCPWM.hpp"
 
 #include <esp_log.h>
@@ -18,14 +14,12 @@
 using namespace esp;
 
 namespace esp {
-    static ESP32Ptr _sharedESP32;
+    static ESP32::specialisationPtr _sharedESP32;
 }
 
-ESP32Ptr ESP32::sharedESP32() {
+ESP32::specialisationPtr ESP32::sharedESP32() {
     if (_sharedESP32 == nullptr) {
-#if defined(CONFIG_IDF_TARGET_ESP32S3) && CONFIG_IDF_TARGET_ESP32S3
-        _sharedESP32 = std::make_shared<ESP32S3>();
-#endif
+        _sharedESP32 = std::make_shared<ESP32::specialisation>();
     }
 
     return _sharedESP32;
@@ -33,24 +27,54 @@ ESP32Ptr ESP32::sharedESP32() {
 
 ESP32::ESP32() : _mcpwm() {}
 
-ADCOneshotPtr ESP32::adcOneshot(adc_unit_t unit, esp_err_t& err) {
+ADCOneshotPtr<Uncalibrated> ESP32::adcOneshot(adc_unit_t unit, esp_err_t& err) {
     size_t unitNum = static_cast<size_t>(unit);
     if (numADCs() < unitNum) {
         err = ESP_ERR_INVALID_ARG;
         return nullptr;
     }
 
-    ADCOneshotPtr adc = _adcs[unitNum];
+    ADCOneshotPtr<Uncalibrated> adc = _uncalibratedAdcs[unitNum].lock();
     if (adc == nullptr) {
-        adc = std::shared_ptr<ADCOneshot>(new ADCOneshot(unit, err));
+        ADCOneshotPtr<Calibrated> calibratedAdc = _calibratedAdcs[unitNum].lock();
+        if (calibratedAdc != nullptr) {
+            err = ESP_ERR_INVALID_STATE;
+            return nullptr;
+        }
+        adc = std::shared_ptr<ADCOneshot<Uncalibrated>>(new ADCOneshot<Uncalibrated>(unit, err));
         if (err != ESP_OK) {
             ESP_LOGE(_loggingTag, "ESP32::adcOneshot failed: %s", esp_err_to_name(err));
             return nullptr;
         }
-        _adcs[unitNum] = adc;
+        _uncalibratedAdcs[unitNum] = adc;
     }
 
-    return _adcs[unitNum];
+    return adc;
+}
+
+ADCOneshotPtr<Calibrated> ESP32::adcOneshot(ADCCalibrationPtr calibration, esp_err_t& err) {
+    size_t unitNum = static_cast<size_t>(calibration->_unit);
+    if (numADCs() < unitNum) {
+        err = ESP_ERR_INVALID_ARG;
+        return nullptr;
+    }
+
+    ADCOneshotPtr<Calibrated> adc = _calibratedAdcs[unitNum].lock();
+    if (adc == nullptr) {
+        ADCOneshotPtr<Uncalibrated> uncalibratedAdc = _uncalibratedAdcs[unitNum].lock();
+        if (uncalibratedAdc != nullptr) {
+            err = ESP_ERR_INVALID_STATE;
+            return nullptr;
+        }
+        adc = std::shared_ptr<ADCOneshot<Calibrated>>(new ADCOneshot<Calibrated>(calibration, err));
+        if (err != ESP_OK) {
+            ESP_LOGE(_loggingTag, "ESP32::adcOneshot failed: %s", esp_err_to_name(err));
+            return nullptr;
+        }
+        _calibratedAdcs[unitNum] = adc;
+    }
+
+    return adc;
 }
 
 GPIOPtr ESP32::gpio(GPIOConfig gpioConfig, esp_err_t& err) {

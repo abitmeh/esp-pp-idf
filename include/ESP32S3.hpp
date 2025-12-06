@@ -11,7 +11,8 @@ namespace esp {
     class ESP32S3 : public ESP32 {
     public:
         ESP32S3() {
-            _adcs.resize(numADCs());
+            _calibratedAdcs.resize(numADCs());
+            _uncalibratedAdcs.resize(numADCs());
             _gpios.resize(numGPIOs());
         }
 
