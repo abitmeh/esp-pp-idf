@@ -1,0 +1,17 @@
+dependencies:
+  esp_pp_idf:
+    dependencies: []
+    source:
+      path: /Users/tdavie/Documents/esp_pp_idf
+      type: local
+    version: '*'
+  idf:
+    source:
+      type: idf
+    version: 5.5.1
+direct_dependencies:
+- esp_pp_idf
+- idf
+manifest_hash: af0d63795e213b8787832099f5f6ac3a4315255bde5e0f008e6ec2bf5b10e5d8
+target: esp32s3
+version: 2.0.0
