@@ -44,7 +44,7 @@ namespace esp {
 
         std::vector<std::weak_ptr<ADCOneshot<Uncalibrated>>> _uncalibratedAdcs;
         std::vector<std::weak_ptr<ADCOneshot<Calibrated>>> _calibratedAdcs;
-        std::vector<GPIOPtr> _gpios;
+        std::vector<std::weak_ptr<GPIO>> _gpios;
 
         mcpwm::MCPWM _mcpwm;
 

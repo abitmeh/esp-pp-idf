@@ -83,7 +83,7 @@ GPIOPtr ESP32::gpio(GPIOConfig gpioConfig, esp_err_t& err) {
         return nullptr;
     }
 
-    GPIOPtr gpio = _gpios[gpioConfig.gpioNum];
+    GPIOPtr gpio = _gpios[gpioConfig.gpioNum].lock();
     if (gpio == nullptr) {
         gpio = std::shared_ptr<GPIO>(new GPIO(gpioConfig, err));
         if (err != ESP_OK) {
@@ -96,6 +96,6 @@ GPIOPtr ESP32::gpio(GPIOConfig gpioConfig, esp_err_t& err) {
         return nullptr;
     }
 
-    return _gpios[gpioConfig.gpioNum];
+    return gpio;
 }
 
