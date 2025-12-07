@@ -31,4 +31,11 @@ namespace esp {
         adc_oneshot_read_isr(channel->_handle, channel->_channel, &rawValue);
         return static_cast<uint16_t>(rawValue);
     }
+
+    uint16_t IRAM_ATTR miliVoltsIsr(ADCOneshotChannel<Calibrated>* channel) {
+        int mV = 0;
+        adc_oneshot_get_calibrated_result(channel->_handle, channel->_calibrationHandle, channel->_channel, &mV);
+        return static_cast<uint16_t>(mV);
+    }
+
 }  // namespace esp

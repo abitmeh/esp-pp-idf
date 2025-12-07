@@ -43,6 +43,7 @@ namespace esp {
 
     uint16_t readIsr(ADCOneshotChannel<Uncalibrated>* channel);
     uint16_t readIsr(ADCOneshotChannel<Calibrated>* channel);
+    uint16_t miliVoltsIsr(ADCOneshotChannel<Calibrated>* channel);
 
     template <ADCCalibrationState calibration>
     class ADCOneshotChannel : private std::enable_shared_from_this<ADCOneshotChannel<calibration>> {
@@ -52,7 +53,7 @@ namespace esp {
         uint16_t read();
 
         template <ADCCalibrationState C = calibration, typename = std::enable_if_t<C>>
-        int16_t miliVolts();
+        uint16_t miliVolts();
 
     private:
         template <ADCCalibrationState C = calibration, typename = std::enable_if_t<!C>>
@@ -63,11 +64,13 @@ namespace esp {
         ADCOneshotPtr<calibration> _adc;
         adc_oneshot_unit_handle_t _handle;  // Keep a copy here for ISR use, since we can't dereference shared_ptrs in ISR.
         adc_channel_t _channel;
+        adc_cali_handle_t _calibrationHandle;
         ADCChannelConfig _config;
 
         friend class ADCOneshot<calibration>;
         friend uint16_t readIsr(ADCOneshotChannel<Uncalibrated>* channel);
         friend uint16_t readIsr(ADCOneshotChannel<Calibrated>* channel);
+        friend uint16_t miliVoltsIsr(ADCOneshotChannel<Calibrated>* channel);
 
         static constexpr char _loggingTag[] = "esp::ADCOneshotChannel";
     };
@@ -120,7 +123,7 @@ namespace esp {
 
     template <ADCCalibrationState calibration>
     template <ADCCalibrationState C, typename>
-    int16_t ADCOneshotChannel<calibration>::miliVolts() {
+    uint16_t ADCOneshotChannel<calibration>::miliVolts() {
         int mV = 0;
         adc_oneshot_get_calibrated_result(_adc->_handle, _adc->_calibration.value()->_calibration, _config.channel, &mV);
         return static_cast<uint16_t>(mV);
@@ -146,6 +149,7 @@ namespace esp {
         _config.configuration.bitwidth = adc->_calibration.value()->_bitwidth;
         _handle = adc->_handle;
         _channel = channel;
+        _calibrationHandle = adc->_calibration.value()->_calibration;
         err = adc_oneshot_config_channel(_adc->_handle, channel, &_config.configuration);
         if (err != ESP_OK) {
             ESP_LOGE(_loggingTag, "adc_oneshot_config_channel failed: %s", esp_err_to_name(err));
