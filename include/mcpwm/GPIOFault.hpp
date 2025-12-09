@@ -23,9 +23,6 @@ namespace esp {
             gpio_num_t gpioNum;
 
             bool activeHigh = false;
-            bool ioLoopBack = false;
-            bool pullUp = false;
-            bool pullDown = false;
         };
 
         class GPIOFault;

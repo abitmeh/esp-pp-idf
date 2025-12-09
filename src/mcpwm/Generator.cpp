@@ -22,10 +22,6 @@ Generator::Generator(OperatorPtr oper, const GeneratorConfig& config, esp_err_t&
     mcpwm_generator_config_t generatorConfig = {.gen_gpio_num = config.gpioNum,
                                                 .flags{
                                                     .invert_pwm = false,
-                                                    .io_loop_back = false,
-                                                    .io_od_mode = false,
-                                                    .pull_up = false,
-                                                    .pull_down = false,
                                                 }};
     err = mcpwm_new_generator(oper->_operator, &generatorConfig, &_generator);
     if (err != ESP_OK) {

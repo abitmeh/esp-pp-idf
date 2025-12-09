@@ -29,7 +29,7 @@ GPIOFault::GPIOFault(const GPIOFaultConfig& config, esp_err_t& err) {
         .group_id = config.groupId,
         .intr_priority = config.interuptPriority,
         .gpio_num = config.gpioNum,
-        .flags = {.active_level = config.activeHigh, .io_loop_back = config.ioLoopBack, .pull_up = config.pullUp, .pull_down = config.pullDown}};
+        .flags = {.active_level = config.activeHigh}};
     err = mcpwm_new_gpio_fault(&faultConfig, &_fault);
     if (err != ESP_OK) {
         ESP_LOGE(_loggingTag, "mcpwm_new_gpio_fault failed: %s", esp_err_to_name(err));

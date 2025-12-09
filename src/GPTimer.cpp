@@ -28,7 +28,6 @@ GPTimer::GPTimer(const GPTimerConfig& config, esp_err_t& err) {
                                     .flags = {
                                         .intr_shared = false,
                                         .allow_pd = false,
-                                        .backup_before_sleep = false,
                                     }};
     err = gptimer_new_timer(&timerConfig, &_timer);
     if (err != ESP_OK) {
