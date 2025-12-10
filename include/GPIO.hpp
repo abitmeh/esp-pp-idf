@@ -7,6 +7,8 @@
 
 #pragma once
 
+#include "Enums.hpp"
+
 #include <driver/gpio.h>
 
 #include <functional>
@@ -121,7 +123,7 @@ namespace esp {
         void setInterrupt(GPIOInteruptType type, GPIOInteruptCallback callback, esp_err_t& err);
 
         bool level();
-        void setLevel(bool level, esp_err_t& err);
+        void setLevel(Level level, esp_err_t& err);
 
     private:
         GPIO(const GPIOConfig& gpioConfig, esp_err_t& err);

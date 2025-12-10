@@ -7,6 +7,9 @@
 
 #pragma once
 
+#include "Timer.hpp"
+#include "Enums.hpp"
+
 #include <driver/gpio.h>
 #include <driver/mcpwm_gen.h>
 
@@ -34,20 +37,36 @@ namespace esp {
         class Operator;
         using OperatorPtr = std::shared_ptr<Operator>;
 
+        enum class GeneratorAction : uint8_t {
+            None = MCPWM_GEN_ACTION_KEEP,
+            Low = MCPWM_GEN_ACTION_LOW,
+            High = MCPWM_GEN_ACTION_HIGH,
+            Toggle = MCPWM_GEN_ACTION_TOGGLE
+        };
+
         class Generator {
         public:
-            struct CompareEventAction {
-                CompareEventAction(mcpwm_timer_direction_t direction, ComparatorPtr comparator, mcpwm_generator_action_t action);
+            struct TimerEventAction {
+                TimerDirection direction;
+                TimerEvent event;
+                GeneratorAction action;
+            };
 
-                mcpwm_timer_direction_t direction;
+            struct CompareEventAction {
+                TimerDirection direction;
                 ComparatorPtr comparator;
-                mcpwm_generator_action_t action;
+                GeneratorAction action;
             };
 
             ~Generator();
 
+            void setActionOnTimerEvent(const TimerEventAction& action, esp_err_t& err);
+            void setActionsOnTimerEvent(std::initializer_list<TimerEventAction> actions, esp_err_t& err);
+
             void setActionOnCompareEvent(const CompareEventAction& action, esp_err_t& err);
             void setActionsOnCompareEvent(std::initializer_list<CompareEventAction> actions, esp_err_t& err);
+
+            void setLevel(Level level, bool overrideGeneratorActions, esp_err_t& err);
 
         private:
             Generator(OperatorPtr oper, const GeneratorConfig& config, esp_err_t& err);

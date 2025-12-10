@@ -15,9 +15,6 @@
 using namespace esp;
 using namespace mcpwm;
 
-Generator::CompareEventAction::CompareEventAction(mcpwm_timer_direction_t dir, ComparatorPtr cmp, mcpwm_generator_action_t act)
-    : direction(dir), comparator(cmp), action(act) {}
-
 Generator::Generator(OperatorPtr oper, const GeneratorConfig& config, esp_err_t& err) : _operator(oper) {
     mcpwm_generator_config_t generatorConfig = {.gen_gpio_num = config.gpioNum,
                                                 .flags{
@@ -39,8 +36,34 @@ Generator::~Generator() {
     }
 }
 
+void Generator::setActionOnTimerEvent(const TimerEventAction& action, esp_err_t& err) {
+    mcpwm_gen_timer_event_action_t mcpwmAction = {
+        .direction = static_cast<mcpwm_timer_direction_t>(action.direction),
+        .event = static_cast<mcpwm_timer_event_t>(action.event),
+        .action = static_cast<mcpwm_generator_action_t>(action.action)
+    };
+    err = mcpwm_generator_set_action_on_timer_event(_generator, mcpwmAction);
+    if (err != ESP_OK) {
+        ESP_LOGE(_loggingTag, "mcpwm_generator_set_action_on_timer_event failed: %s", esp_err_to_name(err));
+        return;
+    }
+}
+
+void Generator::setActionsOnTimerEvent(std::initializer_list<TimerEventAction> actions, esp_err_t& err) {
+    for (const TimerEventAction& action : actions) {
+        setActionOnTimerEvent(action, err);
+        if (err != ESP_OK) {
+            return;
+        }
+    }
+}
+
 void Generator::setActionOnCompareEvent(const CompareEventAction& action, esp_err_t& err) {
-    mcpwm_gen_compare_event_action_t mcpwmAction = {.direction = action.direction, .comparator = action.comparator->_comparator, .action = action.action};
+    mcpwm_gen_compare_event_action_t mcpwmAction = {
+        .direction = static_cast<mcpwm_timer_direction_t>(action.direction),
+        .comparator = action.comparator->_comparator,
+        .action = static_cast<mcpwm_generator_action_t>(action.action)
+    };
     err = mcpwm_generator_set_action_on_compare_event(_generator, mcpwmAction);
     if (err != ESP_OK) {
         ESP_LOGE(_loggingTag, "mcpwm_generator_set_action_on_compare_event failed: %s", esp_err_to_name(err));
@@ -51,6 +74,16 @@ void Generator::setActionOnCompareEvent(const CompareEventAction& action, esp_er
 void Generator::setActionsOnCompareEvent(std::initializer_list<CompareEventAction> actions, esp_err_t& err) {
     for (const CompareEventAction& action : actions) {
         setActionOnCompareEvent(action, err);
+        if (err != ESP_OK) {
+            return;
+        }
+    }
+}
+
+void Generator::setLevel(Level level, bool overrideGeneratorActions, esp_err_t& err) {
+    err = mcpwm_generator_set_force_level(_generator, level, overrideGeneratorActions);
+    if (err != ESP_OK) {
+        ESP_LOGE(_loggingTag, "mcpwm_generator_set_force_level failed: %s", esp_err_to_name(err));
         if (err != ESP_OK) {
             return;
         }

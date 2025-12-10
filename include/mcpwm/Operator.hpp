@@ -13,6 +13,7 @@
 
 #include <memory>
 #include <vector>
+#include <optional>
 
 namespace esp {
     namespace mcpwm {
@@ -38,6 +39,15 @@ namespace esp {
         class Timer;
         using TimerPtr = std::shared_ptr<Timer>;
 
+        struct CarrierWaveConfig {
+            mcpwm_carrier_clock_source_t clockSource = MCPWM_CARRIER_CLK_SRC_DEFAULT;
+            uint32_t frequency;
+            uint32_t firstPulseTicks = 0;
+            float dutyCycle = 0.0f;
+            bool invertBeforeModulation = false;
+            bool invertAfterModulation = false;
+        };
+
         class Operator : public std::enable_shared_from_this<Operator> {
         public:
             ~Operator();
@@ -48,10 +58,15 @@ namespace esp {
             void removeComparator(const ComparatorPtr& comparator);
             void removeGenerator(const GeneratorPtr& generator);
 
+            void enableCarrierWave(const CarrierWaveConfig& config, esp_err_t& err);
+            void setCarrierDutyCycle(float dutyCycle, esp_err_t& err);
+            void disableCarrierWave(esp_err_t& err);
+
         private:
             Operator(TimerPtr timer, const OperatorConfig& config, esp_err_t& err);
 
             mcpwm_oper_handle_t _operator;
+            std::optional<CarrierWaveConfig> _carrierConfig;
 
             std::weak_ptr<Timer> _timer;
             std::vector<GeneratorPtr> _generators;

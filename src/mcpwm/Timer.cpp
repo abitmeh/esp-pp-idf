@@ -36,7 +36,7 @@ Timer::Timer(const TimerConfig& config, esp_err_t& err) : _config(config) {
         .clk_src = config.clockSource,
         .resolution_hz = config.frequency,
         .count_mode = config.countMode,
-        .period_ticks = config.periodTicks,
+        .period_ticks = config.period,
         .intr_priority = config.interuptPriority,
         .flags = {.update_period_on_empty = config.updatePeriodOnEmpty, .update_period_on_sync = config.updatePeriodOnSync, .allow_pd = config.allowPowerDown}};
 
@@ -164,4 +164,18 @@ void Timer::stop(StopCommand cmd, esp_err_t& err) {
         ESP_LOGE(_loggingTag, "mcpwm_timer_start_stop failed: %s", esp_err_to_name(err));
         return;
     }
+}
+
+uint32_t Timer::period() const {
+    return _config.period;
+}
+
+void Timer::setPeriod(uint32_t periodTicks, esp_err_t& err) {
+    err = mcpwm_timer_set_period(_timer, periodTicks);
+    if (err != ESP_OK) {
+        ESP_LOGE(_loggingTag, "mcpwm_timer_set_period failed: %s", esp_err_to_name(err));
+        return;
+    }
+
+    _config.period = periodTicks;
 }

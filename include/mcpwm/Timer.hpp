@@ -21,8 +21,8 @@ namespace esp {
             uint8_t groupId;
             mcpwm_timer_clock_source_t clockSource = MCPWM_TIMER_CLK_SRC_DEFAULT;
             uint32_t frequency;
+            uint32_t period;
             mcpwm_timer_count_mode_t countMode;
-            uint32_t periodTicks;
 
             bool updatePeriodOnEmpty = false;
             bool updatePeriodOnSync = false;
@@ -77,6 +77,9 @@ namespace esp {
             void start(StartCommand cmd, esp_err_t& err);
             void stop(StopCommand cmd, esp_err_t& err);
 
+            uint32_t period() const;
+            void setPeriod(uint32_t periodTicks, esp_err_t& err);
+
         private:
             Timer(const TimerConfig& config, esp_err_t& err);
 
@@ -97,6 +100,17 @@ namespace esp {
             friend bool _onFull(mcpwm_timer_handle_t, const mcpwm_timer_event_data_t*, void*);
             friend bool _onEmpty(mcpwm_timer_handle_t, const mcpwm_timer_event_data_t*, void*);
             friend bool _onStop(mcpwm_timer_handle_t, const mcpwm_timer_event_data_t*, void*);
+        };
+
+        enum class TimerDirection : uint8_t {
+            Up = MCPWM_TIMER_DIRECTION_UP,
+            Down = MCPWM_TIMER_DIRECTION_DOWN,
+        };
+
+        enum class TimerEvent : uint8_t {
+            Full = MCPWM_TIMER_EVENT_FULL,
+            Empty = MCPWM_TIMER_EVENT_EMPTY,
+            Invalid = MCPWM_TIMER_EVENT_INVALID
         };
     }  // namespace mcpwm
 }  // namespace esp

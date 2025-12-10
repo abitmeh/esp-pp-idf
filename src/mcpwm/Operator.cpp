@@ -92,3 +92,53 @@ void Operator::removeComparator(const ComparatorPtr& comparator) {
 void Operator::removeGenerator(const GeneratorPtr& generator) {
     std::erase(_generators, generator);
 }
+
+void Operator::enableCarrierWave(const CarrierWaveConfig& config, esp_err_t& err) {
+    mcpwm_carrier_config_t carrierConfig = {.clk_src = config.clockSource,
+                                            .frequency_hz = config.frequency,
+                                            .first_pulse_duration_us = config.firstPulseTicks * config.frequency / 1'000'000,
+                                            .duty_cycle = config.dutyCycle,
+                                            .flags{
+                                                .invert_before_modulate = config.invertBeforeModulation,
+                                                .invert_after_modulate = config.invertAfterModulation,
+                                            }};
+    err = mcpwm_operator_apply_carrier(_operator, &carrierConfig);
+    if (err != ESP_OK) {
+        ESP_LOGE(_loggingTag, "mcpwm_operator_enable_carrier_wave failed: %s", esp_err_to_name(err));
+        return;
+    }
+
+    _carrierConfig = config;
+}
+
+void Operator::setCarrierDutyCycle(float dutyCycle, esp_err_t& err) {
+    if (!_carrierConfig.has_value()) {
+        err = ESP_ERR_INVALID_STATE;
+        ESP_LOGE(_loggingTag, "Carrier wave not enabled");
+        return;
+    }
+
+    mcpwm_carrier_config_t carrierConfig = {.clk_src = _carrierConfig->clockSource,
+                                            .frequency_hz = _carrierConfig->frequency,
+                                            .first_pulse_duration_us = _carrierConfig->firstPulseTicks * _carrierConfig->frequency / 1'000'000,
+                                            .duty_cycle = dutyCycle,
+                                            .flags{
+                                                .invert_before_modulate = _carrierConfig->invertBeforeModulation,
+                                                .invert_after_modulate = _carrierConfig->invertAfterModulation,
+                                            }};
+    err = mcpwm_operator_apply_carrier(_operator, &carrierConfig);
+    if (err != ESP_OK) {
+        ESP_LOGE(_loggingTag, "mcpwm_operator_set_carrier_duty_cycle failed: %s", esp_err_to_name(err));
+        return;
+    }
+
+    _carrierConfig->dutyCycle = dutyCycle;
+}
+
+void Operator::disableCarrierWave(esp_err_t& err) {
+    err = mcpwm_operator_apply_carrier(_operator, nullptr);
+    if (err != ESP_OK) {
+        ESP_LOGE(_loggingTag, "mcpwm_operator_disable_carrier_wave failed: %s", esp_err_to_name(err));
+        return;
+    }
+}

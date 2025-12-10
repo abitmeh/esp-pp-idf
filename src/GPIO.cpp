@@ -208,7 +208,7 @@ bool GPIO::level() {
     return level != 0;
 }
 
-void GPIO::setLevel(bool level, esp_err_t& err) {
+void GPIO::setLevel(Level level, esp_err_t& err) {
     err = gpio_set_level(_config.gpioNum, static_cast<uint32_t>(level));
     if (err != ESP_OK) {
         ESP_LOGE(_loggingTag, "gpio_set_level failed: %s", esp_err_to_name(err));
