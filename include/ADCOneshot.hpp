@@ -16,6 +16,7 @@
 
 #include <array>
 #include <memory>
+#include <optional>
 #include <vector>
 #include <optional>
 
