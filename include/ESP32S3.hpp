@@ -13,6 +13,7 @@ namespace esp {
         ESP32S3() {
             _calibratedAdcs.resize(numADCs());
             _uncalibratedAdcs.resize(numADCs());
+            _continuousAdcs.resize(numADCs());
             _gpios.resize(numGPIOs());
         }
 

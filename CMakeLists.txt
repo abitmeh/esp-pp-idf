@@ -1,4 +1,4 @@
-idf_component_register(SRC_DIRS "src" "src/mcpwm"
+idf_component_register(SRC_DIRS "src" "src/MCPWM" "src/ADC"
                        INCLUDE_DIRS "include"
                        REQUIRES esp_driver_mcpwm esp_adc esp_driver_gpio esp_driver_gptimer esp_event)
 

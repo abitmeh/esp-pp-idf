@@ -5,8 +5,8 @@
  * 
  */
 
-#include "mcpwm/Timer.hpp"
-#include "mcpwm/Operator.hpp"
+#include "MCPWM/Timer.hpp"
+#include "MCPWM/Operator.hpp"
 
 #include <esp_log.h>
 

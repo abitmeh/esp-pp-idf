@@ -5,10 +5,10 @@
  * 
  */
 
-#include "mcpwm/Generator.hpp"
+#include "MCPWM/Generator.hpp"
 
-#include "mcpwm/Comparator.hpp"
-#include "mcpwm/Operator.hpp"
+#include "MCPWM/Comparator.hpp"
+#include "MCPWM/Operator.hpp"
 
 #include <esp_log.h>
 
@@ -81,7 +81,7 @@ void Generator::setActionsOnCompareEvent(std::initializer_list<CompareEventActio
 }
 
 void Generator::setLevel(Level level, bool overrideGeneratorActions, esp_err_t& err) {
-    err = mcpwm_generator_set_force_level(_generator, level, overrideGeneratorActions);
+    err = mcpwm_generator_set_force_level(_generator, static_cast<int>(level), overrideGeneratorActions);
     if (err != ESP_OK) {
         ESP_LOGE(_loggingTag, "mcpwm_generator_set_force_level failed: %s", esp_err_to_name(err));
         if (err != ESP_OK) {

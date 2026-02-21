@@ -28,14 +28,14 @@ TEST_CASE("Set and get level", "[GPIO]") {
     GPIOPtr gpio2 = ESP32::sharedESP32()->gpio(GPIOConfig(GPIO_NUM_2, GPIOModeInputOutput, PullUp::Disable, PullDown::Disable), err);
     TEST_ASSERT_EQUAL(ESP_OK, err);
     TEST_ASSERT_NOT_NULL(gpio2);
-    gpio2->setLevel(true, err);
+    gpio2->setLevel(esp::Level::High, err);
     TEST_ASSERT_EQUAL(ESP_OK, err);
     bool level = gpio2->level();
     TEST_ASSERT_EQUAL(true, level);
-    gpio2->setLevel(false, err);
+    gpio2->setLevel(esp::Level::Low, err);
     TEST_ASSERT_EQUAL(ESP_OK, err);
     level = gpio2->level();
-    TEST_ASSERT_EQUAL(false, level);
+    TEST_ASSERT_EQUAL(esp::Level::Low, level);
 }
 
 TEST_CASE("GPIO already in use", "[GPIO]") {
@@ -75,11 +75,11 @@ TEST_CASE("GPIO open-drain config", "[GPIO]") {
     GPIOPtr gpio17 = ESP32::sharedESP32()->gpio(GPIOConfig(GPIO_NUM_17, GPIOModeOutputOpenDrain, PullUp::Enable, PullDown::Disable), err);
     TEST_ASSERT_EQUAL(ESP_OK, err);
     TEST_ASSERT_NOT_NULL(gpio17);
-    gpio17->setLevel(false, err);  // should be able to pull low
+    gpio17->setLevel(esp::Level::Low, err);  // should be able to pull low
     TEST_ASSERT_EQUAL(ESP_OK, err);
     bool level = gpio17->level();
     TEST_ASSERT_EQUAL(level, false);
-    gpio17->setLevel(true, err);  // should release to high impedance
+    gpio17->setLevel(esp::Level::High, err);  // should release to high impedance
     TEST_ASSERT_EQUAL(ESP_OK, err);
 }
 
@@ -101,7 +101,7 @@ TEST_CASE("Set GPIO interrupt", "[GPIO]") {
     TEST_ASSERT_EQUAL(ESP_OK, err);
     TEST_ASSERT_NOT_NULL(gpio40);
 
-    gpio40->setLevel(true, err);
+    gpio40->setLevel(esp::Level::High, err);
     TEST_ASSERT_EQUAL(ESP_OK, err);
 
     volatile bool interruptCalled = false;
@@ -115,7 +115,7 @@ TEST_CASE("Set GPIO interrupt", "[GPIO]") {
     TEST_ASSERT_EQUAL(ESP_OK, err);
 
     // Simulate a falling edge by toggling the level
-    gpio40->setLevel(false, err);
+    gpio40->setLevel(esp::Level::Low, err);
     TEST_ASSERT_EQUAL(ESP_OK, err);
 
     // Allow some time for the interrupt to be handled

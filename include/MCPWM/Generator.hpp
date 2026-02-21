@@ -7,7 +7,7 @@
 
 #pragma once
 
-#include "Timer.hpp"
+#include "MCPWM/Timer.hpp"
 #include "Enums.hpp"
 
 #include <driver/gpio.h>

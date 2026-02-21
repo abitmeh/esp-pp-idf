@@ -2,10 +2,11 @@ extern "C" {
 #include <unity.h>
 }
 
-#include "ADCOneshot.hpp"
+#include "ADC/Oneshot.hpp"
 #include "ESP32.hpp"
 
 using namespace esp;
+using namespace esp::adc;
 
 TEST_CASE("Create and destroy units", "[ADCOneshot]") {
     esp_err_t err = ESP_OK;

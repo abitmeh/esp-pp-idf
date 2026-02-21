@@ -2,13 +2,13 @@ dependencies:
   esp_pp_idf:
     dependencies: []
     source:
-      path: /Users/tdavie/Documents/esp_pp_idf
+      path: /home/tdavie/Documents/esp_pp_idf
       type: local
     version: '*'
   idf:
     source:
       type: idf
-    version: 5.5.1
+    version: 6.0.0
 direct_dependencies:
 - esp_pp_idf
 - idf

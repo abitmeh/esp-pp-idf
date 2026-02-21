@@ -5,11 +5,11 @@
  * 
  */
 
-#include "mcpwm/Operator.hpp"
+#include "MCPWM/Operator.hpp"
 
-#include "mcpwm/Comparator.hpp"
-#include "mcpwm/Generator.hpp"
-#include "mcpwm/Timer.hpp"
+#include "MCPWM/Comparator.hpp"
+#include "MCPWM/Generator.hpp"
+#include "MCPWM/Timer.hpp"
 
 #include <esp_log.h>
 

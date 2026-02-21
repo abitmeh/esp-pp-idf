@@ -5,7 +5,7 @@
  * 
  */
 
-#include "mcpwm/GPIOFault.hpp"
+#include "MCPWM/GPIOFault.hpp"
 
 #include <esp_log.h>
 

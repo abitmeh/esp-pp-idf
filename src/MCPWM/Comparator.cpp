@@ -5,9 +5,9 @@
  * 
  */
 
-#include "mcpwm/Comparator.hpp"
+#include "MCPWM/Comparator.hpp"
 
-#include "mcpwm/Operator.hpp"
+#include "MCPWM/Operator.hpp"
 
 #include <esp_log.h>
 

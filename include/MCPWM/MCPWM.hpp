@@ -7,11 +7,11 @@
 
 #pragma once
 
-#include "Comparator.hpp"
-#include "GPIOFault.hpp"
-#include "Generator.hpp"
-#include "Operator.hpp"
-#include "Timer.hpp"
+#include "MCPWM/Comparator.hpp"
+#include "MCPWM/GPIOFault.hpp"
+#include "MCPWM/Generator.hpp"
+#include "MCPWM/Operator.hpp"
+#include "MCPWM/Timer.hpp"
 
 namespace esp {
     class ESP32;
