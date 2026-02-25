@@ -14,12 +14,12 @@ using namespace esp::adc;
 
 ADCChannelConfig::ADCChannelConfig() {}
 
-ADCChannelConfig::ADCChannelConfig(adc_channel_t chan, adc_oneshot_chan_cfg_t config) : channel(chan), configuration(config) {}
+ADCChannelConfig::ADCChannelConfig(adc_channel_t chan, Attenuation attenuation, BitWidth bitwidth) : channel(chan), attenuation(attenuation), bitwidth(bitwidth) {}
 
 namespace esp {
     namespace adc {
         bool operator==(const ADCChannelConfig& a, const ADCChannelConfig& b) {
-            return a.channel == b.channel && a.configuration.atten == b.configuration.atten && a.configuration.bitwidth == b.configuration.bitwidth;
+            return a.channel == b.channel && a.attenuation == b.attenuation && a.bitwidth == b.bitwidth;
         }
 
         uint16_t IRAM_ATTR readIsr(ADCOneshotChannel<Uncalibrated>* channel) {

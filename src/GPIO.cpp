@@ -38,9 +38,9 @@ namespace esp {
     }
 
     void _interruptHandler(void* arg) {
-        GPIO* gpio = static_cast<GPIO*>(arg);
+        auto& [gpio, userInfo] = *reinterpret_cast<std::pair<GPIO*, void*>*>(arg);
         if (gpio->_interuptCallback) {
-            gpio->_interuptCallback();
+            gpio->_interuptCallback(userInfo);
         }
     }
 }  // namespace esp
@@ -156,7 +156,7 @@ GPIOInteruptType GPIO::interruptType() const {
     return _config.interuptType;
 }
 
-void GPIO::setInterrupt(GPIOInteruptType type, GPIOInteruptCallback callback, esp_err_t& err) {
+void GPIO::setInterrupt(GPIOInteruptType type, GPIOInteruptCallback callback, void* userInfo, esp_err_t& err) {
     if (type == GPIOInteruptType::Disable) {
         err = gpio_isr_handler_remove(_config.gpioNum);
         if (err != ESP_OK) {
@@ -175,12 +175,6 @@ void GPIO::setInterrupt(GPIOInteruptType type, GPIOInteruptCallback callback, es
         return;
     }
 
-    err = gpio_intr_enable(_config.gpioNum);
-    if (err != ESP_OK) {
-        ESP_LOGE(_loggingTag, "gpio_intr_enable failed: %s", esp_err_to_name(err));
-        return;
-    }
-
     err = gpio_set_intr_type(_config.gpioNum, static_cast<gpio_int_type_t>(type));
     if (err != ESP_OK) {
         ESP_LOGE(_loggingTag, "gpio_set_intr_type failed: %s", esp_err_to_name(err));
@@ -194,9 +188,16 @@ void GPIO::setInterrupt(GPIOInteruptType type, GPIOInteruptCallback callback, es
     }
 
     _interuptCallback = callback;
-    err = gpio_isr_handler_add(_config.gpioNum, esp::_interruptHandler, this);
+    _userInfo = std::make_pair(this, userInfo);
+    err = gpio_isr_handler_add(_config.gpioNum, esp::_interruptHandler, &_userInfo);
     if (err != ESP_OK) {
         ESP_LOGE(_loggingTag, "gpio_isr_handler_add failed: %s", esp_err_to_name(err));
+        return;
+    }
+
+    err = gpio_intr_enable(_config.gpioNum);
+    if (err != ESP_OK) {
+        ESP_LOGE(_loggingTag, "gpio_intr_enable failed: %s", esp_err_to_name(err));
         return;
     }
 

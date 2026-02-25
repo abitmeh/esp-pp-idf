@@ -10,7 +10,7 @@
 #include <cstdint>
 
 namespace esp {
-    enum InteruptPriority : uint8_t {
+    enum InterruptPriority : uint8_t {
         Default = 0,
         Low,
         MediumLow,
@@ -19,5 +19,10 @@ namespace esp {
         __ESP_IDF_Debug_High,
         NonMaskable,
         __ESP_IDF_Debug_Exception
+    };
+
+    enum class InterruptResult : uint8_t {
+        NoHighPriorityTaskWoken = false,
+        HighPriorityTaskWoken = true
     };
 }  // namespace esp

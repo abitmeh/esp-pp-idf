@@ -95,6 +95,11 @@ TEST_CASE("GPIO destructor", "[GPIO]") {
     TEST_ASSERT_NOT_NULL(gpio2Again);
 }
 
+static void interruptHandler(void* userInfo) {
+    bool* interruptCalled = reinterpret_cast<bool*>(userInfo);
+    *interruptCalled = true;
+}
+
 TEST_CASE("Set GPIO interrupt", "[GPIO]") {
     esp_err_t err = ESP_OK;
     GPIOPtr gpio40 = ESP32::sharedESP32()->gpio(GPIOConfig(GPIO_NUM_40, GPIOModeInputOutput, PullUp::Enable), err);
@@ -104,13 +109,11 @@ TEST_CASE("Set GPIO interrupt", "[GPIO]") {
     gpio40->setLevel(esp::Level::High, err);
     TEST_ASSERT_EQUAL(ESP_OK, err);
 
-    volatile bool interruptCalled = false;
+    bool interruptCalled = false;
     gpio40->setInterrupt(
         GPIOInteruptType::NegativeEdge,
-        [&interruptCalled]() {
-            (void)0;
-            interruptCalled = true;
-        },
+        interruptHandler,
+        &interruptCalled,
         err);
     TEST_ASSERT_EQUAL(ESP_OK, err);
 

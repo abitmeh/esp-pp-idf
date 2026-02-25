@@ -7,7 +7,7 @@
 
 #pragma once
 
-#include "Interupt.hpp"
+#include "Interrupt.hpp"
 
 #include <driver/gpio.h>
 #include <driver/mcpwm_fault.h>
@@ -19,7 +19,7 @@ namespace esp {
     namespace mcpwm {
         struct GPIOFaultConfig {
             uint8_t groupId;
-            InteruptPriority interuptPriority = Default;
+            InterruptPriority interruptPriority = Default;
             gpio_num_t gpioNum;
 
             bool activeHigh = false;
@@ -33,21 +33,22 @@ namespace esp {
 
         class GPIOFault {
         public:
-            using Callback = std::function<bool(const mcpwm_fault_event_data_t&)>;
+            using Callback = InterruptResult(*)(const mcpwm_fault_event_data_t&, void* userInfo);
 
             struct Callbacks {
-                Callback onFaultEnter;
-                Callback onFaultExit;
+                Callback onFaultEnter = nullptr;
+                Callback onFaultExit = nullptr;
             };
 
             ~GPIOFault();
 
-            void setCallbacks(const Callbacks& callbacks, esp_err_t& err);
+            void setCallbacks(const Callbacks& callbacks, void* userInfo, esp_err_t& err);
 
         private:
             GPIOFault(const GPIOFaultConfig& config, esp_err_t& err);
 
             Callbacks _callbacks;
+            std::pair<GPIOFault*, void*> _userInfo;
 
             mcpwm_fault_handle_t _fault;
 
@@ -56,7 +57,7 @@ namespace esp {
             friend class MCPWM;
 
             friend bool _onFaultEnter(mcpwm_fault_handle_t fault, const mcpwm_fault_event_data_t* faultData, void* userInfo);
-            friend bool _onFaultExit(mcpwm_fault_handle_t, const mcpwm_fault_event_data_t*, void*);
+            friend bool _onFaultExit(mcpwm_fault_handle_t, const mcpwm_fault_event_data_t*, void* userINfo);
         };
     }  // namespace mcpwm
 }  // namespace esp

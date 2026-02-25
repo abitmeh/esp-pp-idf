@@ -1,5 +1,7 @@
 #pragma once
 
+#include "ADC/Types.hpp"
+
 #include <esp_adc/adc_cali.h>
 #include <esp_adc/adc_cali_scheme.h>
 #include <esp_log.h>
@@ -26,12 +28,12 @@ namespace esp {
 
         class ADCCalibration {
         public:
-            ADCCalibration(adc_unit_t unit, adc_atten_t attenuation, adc_bitwidth_t bitwidth, esp_err_t& err);
+            ADCCalibration(adc_unit_t unit, Attenuation attenuation, BitWidth bitwidth, esp_err_t& err);
 
         private:
             adc_unit_t _unit;
-            adc_atten_t _attenuation;
-            adc_bitwidth_t _bitwidth;
+            Attenuation _attenuation;
+            BitWidth _bitwidth;
 
             adc_cali_handle_t _calibration;
 
@@ -48,26 +50,26 @@ namespace esp {
         // IMPLEMENTATION
         //
 
-        inline ADCCalibration::ADCCalibration(adc_unit_t unit, adc_atten_t attenuation, adc_bitwidth_t bitwidth, esp_err_t& err)
+        inline ADCCalibration::ADCCalibration(adc_unit_t unit, Attenuation attenuation, BitWidth bitwidth, esp_err_t& err)
             : _unit(unit), _attenuation(attenuation), _bitwidth(bitwidth) {
     #if defined(ADC_CALI_SCHEME_CURVE_FITTING_SUPPORTED) && ADC_CALI_SCHEME_CURVE_FITTING_SUPPORTED
             adc_cali_curve_fitting_config_t calibrationConfig = {
                 .unit_id = unit,
                 .chan = ADC_CHANNEL_0,  // Ignored, but here to suppress warning about missing field.
-                .atten = attenuation,
-                .bitwidth = bitwidth,
+                .atten = static_cast<adc_atten_t>(attenuation),
+                .bitwidth = static_cast<adc_bitwidth_t>(_bitwidth),
             };
             err = adc_cali_create_scheme_curve_fitting(&calibrationConfig, &_calibration);
     #else
             adc_cali_line_fitting_config_t calibrationConfig = {
                 .unit_id = unit,
-                .atten = attenuation,
-                .bitwidth = bitwidth,
+                .atten = static_cast<adc_atten_t>(attenuation),
+                .bitwidth = static_cast<adc_bitwidth_t>(_bitwidth),
             };
             err = adc_cali_create_scheme_line_fitting(&calibrationConfig, &_calibration);
     #endif
             if (err != ESP_OK) {
-                ESP_LOGE(_loggingTag, "adc_cali_create_scheme_curve_fitting failed: %s", esp_err_to_name(err));
+                ESP_LOGE(_loggingTag, "adc_cali_create_scheme_line_fitting failed: %s", esp_err_to_name(err));
             }
         }
     }

@@ -86,7 +86,7 @@ namespace esp {
 
     void _interruptHandler(void* arg);
 
-    using GPIOInteruptCallback = std::function<void()>;
+    using GPIOInteruptCallback = void(*)(void* userInfo);
 
     struct GPIOConfig {
     public:
@@ -120,7 +120,7 @@ namespace esp {
         void setPullDown(PullDown pullDown, esp_err_t& err);
 
         GPIOInteruptType interruptType() const;
-        void setInterrupt(GPIOInteruptType type, GPIOInteruptCallback callback, esp_err_t& err);
+        void setInterrupt(GPIOInteruptType type, GPIOInteruptCallback callback, void* userInfo, esp_err_t& err);
 
         bool level();
         void setLevel(Level level, esp_err_t& err);
@@ -130,6 +130,7 @@ namespace esp {
 
         GPIOConfig _config;
         GPIOInteruptCallback _interuptCallback;
+        std::pair<GPIO*, void*> _userInfo;
 
         friend void esp::_interruptHandler(void* arg);
 

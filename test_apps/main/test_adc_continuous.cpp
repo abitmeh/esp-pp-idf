@@ -10,6 +10,8 @@ using namespace esp::adc;
 
 TEST_CASE("Create and destroy units", "[ADCContinuous]") {
     adc::ADCContinuousConfig config1{
+        .maximumStoredValues = 32,
+        .numberOfValuesPerConversionFrame = 16,
         .channels =
             {
                 {
@@ -38,6 +40,8 @@ TEST_CASE("Create and destroy units", "[ADCContinuous]") {
 
 TEST_CASE("Get channels", "[ADCContinuous]") {
     adc::ADCContinuousConfig config{
+        .maximumStoredValues = 32,
+        .numberOfValuesPerConversionFrame = 16,
         .channels =
             {
                 {
@@ -64,6 +68,8 @@ TEST_CASE("Get channels", "[ADCContinuous]") {
 
 TEST_CASE("Start and stop", "[ADCContinuous]") {
     adc::ADCContinuousConfig config{
+        .maximumStoredValues = 32,
+        .numberOfValuesPerConversionFrame = 16,
         .channels =
             {
                 {
@@ -88,6 +94,8 @@ TEST_CASE("Start and stop", "[ADCContinuous]") {
 
 TEST_CASE("Read", "[ADCContinuous]") {
     adc::ADCContinuousConfig config{
+        .maximumStoredValues = 32,
+        .numberOfValuesPerConversionFrame = 16,
         .channels =
             {
                 {
@@ -115,6 +123,8 @@ TEST_CASE("Read", "[ADCContinuous]") {
 
 TEST_CASE("Read parsed", "[ADCContinuous]") {
     adc::ADCContinuousConfig config{
+        .maximumStoredValues = 32,
+        .numberOfValuesPerConversionFrame = 16,
         .channels =
             {
                 {
@@ -140,6 +150,8 @@ TEST_CASE("Read parsed", "[ADCContinuous]") {
 
 TEST_CASE("Parse", "[ADCContinuous]") {
     adc::ADCContinuousConfig config{
+        .maximumStoredValues = 32,
+        .numberOfValuesPerConversionFrame = 16,
         .channels =
             {
                 {
@@ -168,6 +180,8 @@ TEST_CASE("Parse", "[ADCContinuous]") {
 
 TEST_CASE("Flush", "[ADCContinuous]") {
     adc::ADCContinuousConfig config{
+        .maximumStoredValues = 32,
+        .numberOfValuesPerConversionFrame = 16,
         .channels =
             {
                 {
@@ -196,6 +210,8 @@ TEST_CASE("Flush", "[ADCContinuous]") {
 
 TEST_CASE("Unit already in use", "[ADCContinuous]") {
     adc::ADCContinuousConfig config1{
+        .maximumStoredValues = 32,
+        .numberOfValuesPerConversionFrame = 16,
         .channels =
             {
                 {
@@ -209,6 +225,8 @@ TEST_CASE("Unit already in use", "[ADCContinuous]") {
     };
 
     adc::ADCContinuousConfig config2{
+        .maximumStoredValues = 32,
+        .numberOfValuesPerConversionFrame = 16,
         .channels =
             {
                 {

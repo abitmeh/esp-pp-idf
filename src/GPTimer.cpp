@@ -12,13 +12,13 @@
 using namespace esp;
 
 namespace esp {
-    bool _onAlarm(gptimer_handle_t timerHandle, const gptimer_alarm_event_data_t* eventData, void* userInfo) {
-        GPTimer* timer = reinterpret_cast<GPTimer*>(userInfo);
-        return timer->onAlarm(*eventData);
+    bool _onAlarm(gptimer_handle_t timerHandle, const gptimer_alarm_event_data_t* eventData, void* userData) {
+        auto& [timer, userInfo] = *reinterpret_cast<std::pair<GPTimer*, void*>*>(userData);
+        return timer->onAlarm(*eventData, userInfo);
     }
 }  // namespace esp
 
-GPTimer::GPTimer(const GPTimerConfig& config, esp_err_t& err) {
+GPTimer::GPTimer(const GPTimerConfig& config, void* userInfo, esp_err_t& err) {
     _callback = config.callback;
 
     gptimer_config_t timerConfig = {.clk_src = GPTIMER_CLK_SRC_DEFAULT,
@@ -36,7 +36,8 @@ GPTimer::GPTimer(const GPTimerConfig& config, esp_err_t& err) {
     }
 
     gptimer_event_callbacks_t callbacks = {.on_alarm = esp::_onAlarm};
-    err = gptimer_register_event_callbacks(_timer, &callbacks, this);
+    _userInfo = std::make_pair(this, userInfo);
+    err = gptimer_register_event_callbacks(_timer, &callbacks, &_userInfo);
     if (err != ESP_OK) {
         ESP_LOGE(_loggingTag, "gptimer_register_event_callbacks failed: %s", esp_err_to_name(err));
         return;
@@ -88,9 +89,9 @@ void GPTimer::stop(esp_err_t& err) {
     }
 }
 
-bool GPTimer::onAlarm(const gptimer_alarm_event_data_t& eventData) {
+bool GPTimer::onAlarm(const gptimer_alarm_event_data_t& eventData, void* userInfo) {
     if (_callback) {
-        return _callback(*this, eventData);
+        return static_cast<bool>(_callback(*this, eventData, userInfo));
     } else {
         return false;
     }

@@ -1,5 +1,8 @@
 #pragma once
 
+#include "ADC/Types.hpp"
+#include "Interrupt.hpp"
+
 #include <esp_adc/adc_continuous.h>
 
 #include <functional>
@@ -15,31 +18,12 @@ namespace esp {
         class ADCContinuous;
         using ADCContinuousPtr = std::shared_ptr<ADCContinuous>;
 
-        using ADCContinuousConversionCallback = std::function<void(const ADCContinuousPtr& adc, const std::span<uint8_t>& conversionData)>;
-        using ADCContinuousParsedConversionCallback =
-            std::function<void(const ADCContinuousPtr& adc, const std::vector<adc_continuous_data_t>& conversionData)>;
-        using ADCContinuousPoolOverflowCallback = std::function<void(const ADCContinuousPtr& adc)>;
+        using ADCContinuousConversionCallback = InterruptResult(*)(const uint8_t* conversionData, size_t count, void* userInfo);
+        using ADCContinuousPoolOverflowCallback = InterruptResult(*)(void* userInfo);
 
         struct ADCContinuousEventCallbacks {
             ADCContinuousConversionCallback onConversionComplete = nullptr;
-            ADCContinuousParsedConversionCallback onParsedConversionComplete = nullptr;
             ADCContinuousPoolOverflowCallback onPoolOverflow = nullptr;
-        };
-
-        enum class Attenuation : uint8_t {
-            None = ADC_ATTEN_DB_0,
-            Decibels2_5 = ADC_ATTEN_DB_2_5,
-            Decibels6 = ADC_ATTEN_DB_6,
-            Decibels12 = ADC_ATTEN_DB_12,
-        };
-
-        enum class BitWidth : uint8_t {
-            Default = ADC_BITWIDTH_DEFAULT,
-            Bits9 = ADC_BITWIDTH_9,
-            Bits10 = ADC_BITWIDTH_10,
-            Bits11 = ADC_BITWIDTH_11,
-            Bits12 = ADC_BITWIDTH_12,
-            Bits13 = ADC_BITWIDTH_13,
         };
 
         struct ADCContinuousChannelConfig {
@@ -62,8 +46,8 @@ namespace esp {
         };
 
         struct ADCContinuousConfig {
-            uint32_t maximumStorageBytes = 1024;
-            uint32_t conversionFrameBytes = 512;
+            size_t maximumStoredValues;
+            size_t numberOfValuesPerConversionFrame;
             bool flushWhenFull = true;
 
             std::vector<ADCContinuousChannelConfig> channels{};
@@ -79,7 +63,7 @@ namespace esp {
         public:
             ~ADCContinuous();
 
-            esp_err_t setEventCallbacks(const ADCContinuousEventCallbacks& callbacks);
+            esp_err_t setEventCallbacks(const ADCContinuousEventCallbacks& callbacks, void* userInfo);
 
             esp_err_t start();
             esp_err_t stop();
@@ -90,8 +74,7 @@ namespace esp {
             std::vector<adc_continuous_data_t> readParsed(uint32_t timeoutMs, esp_err_t& err);
             template <std::ranges::viewable_range R>
             std::vector<adc_continuous_data_t> parse(const R& rawData, esp_err_t& err) const;
-            template <std::ranges::viewable_range R, size_t N>
-            void parse(const R& rawData, std::array<adc_continuous_data_t, N>& parsedData, esp_err_t& err) const;
+            void parse(const uint8_t* rawData, size_t count, adc_continuous_data_t* parsedData, esp_err_t& err) const;
 
             esp_err_t flush();
 
@@ -100,6 +83,7 @@ namespace esp {
 
             adc_continuous_handle_t _handle;
             ADCContinuousEventCallbacks _callbacks;
+            std::pair<ADCContinuous*, void*> _userInfo;
             uint32_t _maxStoreBufSize = 1024;
             uint32_t _convFrameSize = 512;
             bool _started = false;
@@ -150,10 +134,9 @@ namespace esp {
             return parsedData;
         }
 
-        template <std::ranges::viewable_range R, size_t N>
-        void ADCContinuous::parse(const R& rawData, std::array<adc_continuous_data_t, N>& parsedData, esp_err_t& err) const {
+        inline void ADCContinuous::parse(const uint8_t* rawData, size_t count, adc_continuous_data_t* parsedData, esp_err_t& err) const {
             uint32_t numParsedSamples = 0;
-            err = adc_continuous_parse_data(_handle, rawData.data(), rawData.size(), parsedData.data(), &numParsedSamples);
+            err = adc_continuous_parse_data(_handle, rawData, count, parsedData, &numParsedSamples);
             if (err != ESP_OK) {
                 return;
             }

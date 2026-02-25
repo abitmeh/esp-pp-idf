@@ -8,33 +8,33 @@ using namespace esp::adc;
 namespace esp {
     namespace adc {
         bool _onConversionComplete(adc_continuous_handle_t handle, const adc_continuous_evt_data_t* data, void* userData) {
-            ADCContinuousPtr adc = static_cast<ADCContinuous*>(userData)->shared_from_this();
+            auto& [adc, userInfo] = *reinterpret_cast<std::pair<ADCContinuous*, void*>*>(userData);
+            ADCContinuousPtr ownedAdc = adc->shared_from_this();
 
-            const std::span<uint8_t> conversionData(data->conv_frame_buffer, data->size);
-
-            if (adc->_callbacks.onConversionComplete) {
-                adc->_callbacks.onConversionComplete(adc, conversionData);
+            if (ownedAdc == nullptr) {
+                return false;
             }
 
-            if (adc->_callbacks.onParsedConversionComplete) {
-                esp_err_t err = ESP_OK;
-                std::vector<adc_continuous_data_t> parsedData = adc->parse(conversionData, err);
-                if (err != ESP_OK) {
-                    ESP_LOGE(adc->_loggingTag, "Failed to parse conversion data in callback: %s", esp_err_to_name(err));
-                    return false;
-                }
-                adc->_callbacks.onParsedConversionComplete(adc, parsedData);
+            if (!adc->_callbacks.onConversionComplete) {
+                return false;
             }
-            return false;
+
+            return static_cast<bool>(adc->_callbacks.onConversionComplete(data->conv_frame_buffer, data->size, userInfo));
         }
 
         bool _onPoolOverflow(adc_continuous_handle_t handle, const adc_continuous_evt_data_t* data, void* userData) {
-            ADCContinuousPtr adc = static_cast<ADCContinuous*>(userData)->shared_from_this();
+            auto& [adc, userInfo] = *reinterpret_cast<std::pair<ADCContinuous*, void*>*>(userData);
+            ADCContinuousPtr ownedAdc = adc->shared_from_this();
 
-            if (adc->_callbacks.onPoolOverflow) {
-                adc->_callbacks.onPoolOverflow(adc);
+            if (ownedAdc == nullptr) {
+                return false;
             }
-            return false;
+
+            if (!adc->_callbacks.onPoolOverflow) {
+                return false;
+            }
+
+            return static_cast<bool>(adc->_callbacks.onPoolOverflow(userInfo));
         }
     }  // namespace adc
 }  // namespace esp
@@ -56,13 +56,14 @@ ADCContinuous::~ADCContinuous() {
     }
 }
 
-esp_err_t ADCContinuous::setEventCallbacks(const ADCContinuousEventCallbacks& callbacks) {
+esp_err_t ADCContinuous::setEventCallbacks(const ADCContinuousEventCallbacks& callbacks, void* userInfo) {
     adc_continuous_evt_cbs_t callbackConfig = {
-        .on_conv_done = (callbacks.onConversionComplete || callbacks.onParsedConversionComplete) ? _onConversionComplete : nullptr,
+        .on_conv_done = callbacks.onConversionComplete ? _onConversionComplete : nullptr,
         .on_pool_ovf = callbacks.onPoolOverflow ? _onPoolOverflow : nullptr,
     };
     _callbacks = callbacks;
-    esp_err_t err = adc_continuous_register_event_callbacks(_handle, &callbackConfig, this);
+    _userInfo = std::make_pair(this, userInfo);
+    esp_err_t err = adc_continuous_register_event_callbacks(_handle, &callbackConfig, &_userInfo);
     if (err != ESP_OK) {
         ESP_LOGE(_loggingTag, "adc_continuous_register_event_callbacks failed: %s", esp_err_to_name(err));
     }
@@ -104,8 +105,8 @@ esp_err_t ADCContinuous::flush() {
 }
 
 ADCContinuous::ADCContinuous(const ADCContinuousConfig& config, esp_err_t& err) {
-    const adc_continuous_handle_cfg_t continuousConfig = {.max_store_buf_size = config.maximumStorageBytes,
-                                                          .conv_frame_size = config.conversionFrameBytes,
+    const adc_continuous_handle_cfg_t continuousConfig = {.max_store_buf_size = config.maximumStoredValues * SOC_ADC_DIGI_DATA_BYTES_PER_CONV,
+                                                          .conv_frame_size = config.numberOfValuesPerConversionFrame * SOC_ADC_DIGI_DATA_BYTES_PER_CONV,
                                                           .flags{
                                                               .flush_pool = config.flushWhenFull,
                                                           }};

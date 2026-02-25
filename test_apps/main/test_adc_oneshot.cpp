@@ -31,18 +31,18 @@ TEST_CASE("Get channels", "[ADCOneshot]") {
     esp_err_t err = ESP_OK;
     ADCOneshotPtr<Uncalibrated> adc1 = ESP32::sharedESP32()->adcOneshot(ADC_UNIT_1, err);
     ADCOneshotPtr<Uncalibrated> adc2 = ESP32::sharedESP32()->adcOneshot(ADC_UNIT_2, err);
-    ADCChannelConfig config(ADC_CHANNEL_0, (adc_oneshot_chan_cfg_t){.atten = ADC_ATTEN_DB_12, .bitwidth = ADC_BITWIDTH_12});
+    ADCChannelConfig config(ADC_CHANNEL_0, Attenuation::Decibels12, BitWidth::Bits12);
     ADCOneshotChannelPtr unit1Channel0 = adc1->channel(config, err);
     TEST_ASSERT_EQUAL(err, ESP_OK);
     TEST_ASSERT_NOT_NULL(unit1Channel0);
-    ADCChannelConfig config2(ADC_CHANNEL_1, (adc_oneshot_chan_cfg_t){.atten = ADC_ATTEN_DB_6, .bitwidth = ADC_BITWIDTH_12});
+    ADCChannelConfig config2(ADC_CHANNEL_1, Attenuation::Decibels6, BitWidth::Bits12);
     ADCOneshotChannelPtr unit1Channel1 = adc1->channel(config2, err);
     TEST_ASSERT_EQUAL(err, ESP_OK);
     TEST_ASSERT_NOT_NULL(unit1Channel1);
     ADCOneshotChannelPtr unit2Channel0 = adc2->channel(config, err);
     TEST_ASSERT_EQUAL(err, ESP_OK);
     TEST_ASSERT_NOT_NULL(unit2Channel0);
-    ADCChannelConfig config3(ADC_CHANNEL_1, (adc_oneshot_chan_cfg_t){.atten = ADC_ATTEN_DB_2_5, .bitwidth = ADC_BITWIDTH_12});
+    ADCChannelConfig config3(ADC_CHANNEL_1, Attenuation::Decibels2_5, BitWidth::Bits12);
     ADCOneshotChannelPtr unit2Channel1 = adc2->channel(config3, err);
     TEST_ASSERT_EQUAL(err, ESP_OK);
     TEST_ASSERT_NOT_NULL(unit2Channel1);
@@ -57,7 +57,7 @@ TEST_CASE("Get channels", "[ADCOneshot]") {
 TEST_CASE("Read channels", "[ADCOneshot]") {
     esp_err_t err = ESP_OK;
     ADCOneshotPtr<Uncalibrated> adc1 = ESP32::sharedESP32()->adcOneshot(ADC_UNIT_1, err);
-    ADCChannelConfig config(ADC_CHANNEL_0, (adc_oneshot_chan_cfg_t){.atten = ADC_ATTEN_DB_12, .bitwidth = ADC_BITWIDTH_12});
+    ADCChannelConfig config(ADC_CHANNEL_0, Attenuation::Decibels12, BitWidth::Bits12);
     ADCOneshotChannelPtr unit1Channel0 = adc1->channel(config, err);
     TEST_ASSERT_EQUAL(err, ESP_OK);
     TEST_ASSERT_NOT_NULL(unit1Channel0);
@@ -68,7 +68,7 @@ TEST_CASE("Read channels", "[ADCOneshot]") {
 TEST_CASE("Read channels in ISR", "[ADCOneshot]") {
     esp_err_t err = ESP_OK;
     ADCOneshotPtr<Uncalibrated> adc1 = ESP32::sharedESP32()->adcOneshot(ADC_UNIT_1, err);
-    ADCChannelConfig config(ADC_CHANNEL_0, (adc_oneshot_chan_cfg_t){.atten = ADC_ATTEN_DB_12, .bitwidth = ADC_BITWIDTH_12});
+    ADCChannelConfig config(ADC_CHANNEL_0, Attenuation::Decibels12, BitWidth::Bits12);
     ADCOneshotChannelPtr unit1Channel0 = adc1->channel(config, err);
     TEST_ASSERT_EQUAL(err, ESP_OK);
     TEST_ASSERT_NOT_NULL(unit1Channel0);
@@ -80,7 +80,7 @@ TEST_CASE("Read channels in ISR", "[ADCOneshot]") {
 
 TEST_CASE("Create calibrated ADCOneshot", "[ADCOneshot]") {
     esp_err_t err = ESP_OK;
-    ADCCalibrationPtr calibration = std::make_shared<ADCCalibration>(ADC_UNIT_1, ADC_ATTEN_DB_12, ADC_BITWIDTH_12, err);
+    ADCCalibrationPtr calibration = std::make_shared<ADCCalibration>(ADC_UNIT_1, Attenuation::Decibels12, BitWidth::Bits12, err);
     TEST_ASSERT_EQUAL(err, ESP_OK);
     TEST_ASSERT_NOT_NULL(calibration);
     ADCOneshotPtr<Calibrated> calibratedAdc = ESP32::sharedESP32()->adcOneshot(calibration, err);
@@ -95,7 +95,7 @@ TEST_CASE("Create calibrated ADCOneshot", "[ADCOneshot]") {
 
 TEST_CASE("Read calibrated channel in mV", "[ADCOneshot]") {
     esp_err_t err = ESP_OK;
-    ADCCalibrationPtr calibration = std::make_shared<ADCCalibration>(ADC_UNIT_1, ADC_ATTEN_DB_12, ADC_BITWIDTH_12, err);
+    ADCCalibrationPtr calibration = std::make_shared<ADCCalibration>(ADC_UNIT_1, Attenuation::Decibels12, BitWidth::Bits12, err);
     TEST_ASSERT_EQUAL(err, ESP_OK);
     TEST_ASSERT_NOT_NULL(calibration);
     ADCOneshotPtr<Calibrated> calibratedAdc = ESP32::sharedESP32()->adcOneshot(calibration, err);

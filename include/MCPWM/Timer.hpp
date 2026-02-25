@@ -7,9 +7,8 @@
 
 #pragma once
 
-#include "Interupt.hpp"
-
-#include <driver/mcpwm_timer.h>
+#include "Interrupt.hpp"
+#include "MCPWM/Types.hpp"
 
 #include <functional>
 #include <memory>
@@ -28,7 +27,7 @@ namespace esp {
             bool updatePeriodOnSync = false;
             bool allowPowerDown = false;
 
-            InteruptPriority interuptPriority = Default;
+            InterruptPriority interruptPriority = Default;
         };
 
         class Timer;
@@ -44,12 +43,12 @@ namespace esp {
 
         class Timer : public std::enable_shared_from_this<Timer> {
         public:
-            using EventCallback = std::function<bool(const mcpwm_timer_event_data_t& eventData)>;
+            using EventCallback = InterruptResult(*)(const mcpwm_timer_event_data_t& eventData, void* userInfo);
 
             struct EventCallbacks {
-                EventCallback onFull;
-                EventCallback onEmpty;
-                EventCallback onStop;
+                EventCallback onFull = nullptr;
+                EventCallback onEmpty = nullptr;
+                EventCallback onStop = nullptr;
             };
 
             enum class StartCommand : uint8_t {
@@ -69,7 +68,7 @@ namespace esp {
 
             void removeOperator(const OperatorPtr& oper);
 
-            void setEventCallbacks(const EventCallbacks& eventCallbacks, esp_err_t& err);
+            void setEventCallbacks(const EventCallbacks& eventCallbacks, void* userInfo, esp_err_t& err);
 
             void enable(esp_err_t& err);
             void disable(esp_err_t& err);
@@ -90,7 +89,12 @@ namespace esp {
 
             bool _enabled = false;
 
-            EventCallbacks _callbacks;
+            EventCallbacks _callbacks{
+                .onFull = nullptr,
+                .onEmpty = nullptr,
+                .onStop = nullptr
+            };
+            std::pair<Timer*, void*> _userInfo;
 
             static constexpr char _loggingTag[] = "esp::mcpwm::Timer";
 
@@ -100,17 +104,6 @@ namespace esp {
             friend bool _onFull(mcpwm_timer_handle_t, const mcpwm_timer_event_data_t*, void*);
             friend bool _onEmpty(mcpwm_timer_handle_t, const mcpwm_timer_event_data_t*, void*);
             friend bool _onStop(mcpwm_timer_handle_t, const mcpwm_timer_event_data_t*, void*);
-        };
-
-        enum class TimerDirection : uint8_t {
-            Up = MCPWM_TIMER_DIRECTION_UP,
-            Down = MCPWM_TIMER_DIRECTION_DOWN,
-        };
-
-        enum class TimerEvent : uint8_t {
-            Full = MCPWM_TIMER_EVENT_FULL,
-            Empty = MCPWM_TIMER_EVENT_EMPTY,
-            Invalid = MCPWM_TIMER_EVENT_INVALID
         };
     }  // namespace mcpwm
 }  // namespace esp

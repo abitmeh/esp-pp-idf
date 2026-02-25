@@ -7,6 +7,8 @@
 
 #pragma once
 
+#include "Interrupt.hpp"
+
 #include <driver/gptimer.h>
 
 #include <esp_attr.h>
@@ -20,7 +22,7 @@ namespace esp {
     class GPTimer;
     using GPTimerPtr = std::shared_ptr<GPTimer>;
 
-    using GPTimerCallback = std::function<bool(GPTimer&, const gptimer_alarm_event_data_t&)>;
+    using GPTimerCallback = InterruptResult(*)(GPTimer&, const gptimer_alarm_event_data_t&, void* userInfo);
 
     struct GPTimerConfig {
         uint32_t durationMicroseconds;
@@ -29,7 +31,7 @@ namespace esp {
 
     class GPTimer {
     public:
-        GPTimer(const GPTimerConfig& config, esp_err_t& err);
+        GPTimer(const GPTimerConfig& config, void* userInfo, esp_err_t& err);
         ~GPTimer();
 
         void start(esp_err_t& err);
@@ -38,9 +40,10 @@ namespace esp {
     private:
         gptimer_handle_t _timer;
 
-        IRAM_ATTR bool onAlarm(const gptimer_alarm_event_data_t& eventData);
+        IRAM_ATTR bool onAlarm(const gptimer_alarm_event_data_t& eventData, void* userInfo);
 
         GPTimerCallback _callback;
+        std::pair<GPTimer*, void*> _userInfo;
 
         static constexpr char _loggingTag[] = "esp::GPTimer";
 

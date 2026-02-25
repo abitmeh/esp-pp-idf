@@ -67,6 +67,7 @@ namespace esp {
             void setActionsOnCompareEvent(std::initializer_list<CompareEventAction> actions, esp_err_t& err);
 
             void setLevel(Level level, bool overrideGeneratorActions, esp_err_t& err);
+            void clearLevel(esp_err_t& err);
 
         private:
             Generator(OperatorPtr oper, const GeneratorConfig& config, esp_err_t& err);

@@ -20,7 +20,7 @@ using namespace mcpwm;
 
 Operator::Operator(TimerPtr timer, const OperatorConfig& config, esp_err_t& err) : _timer(timer) {
     const mcpwm_operator_config_t operatorConfig = {.group_id = timer->_config.groupId,
-                                                    .intr_priority = config.interuptPriority,
+                                                    .intr_priority = config.interruptPriority,
                                                     .flags{
                                                         .update_gen_action_on_tez = config.updateGeneratorActionOnTimerZero,
                                                         .update_gen_action_on_tep = config.updateGeneratorActionOnTimerPeak,

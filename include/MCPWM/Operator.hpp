@@ -7,7 +7,7 @@
 
 #pragma once
 
-#include "Interupt.hpp"
+#include "Interrupt.hpp"
 
 #include <driver/mcpwm_oper.h>
 
@@ -18,7 +18,7 @@
 namespace esp {
     namespace mcpwm {
         struct OperatorConfig {
-            InteruptPriority interuptPriority = Default;
+            InterruptPriority interruptPriority = Default;
 
             bool updateGeneratorActionOnTimerZero = false;
             bool updateGeneratorActionOnTimerPeak = false;

@@ -84,8 +84,14 @@ void Generator::setLevel(Level level, bool overrideGeneratorActions, esp_err_t& 
     err = mcpwm_generator_set_force_level(_generator, static_cast<int>(level), overrideGeneratorActions);
     if (err != ESP_OK) {
         ESP_LOGE(_loggingTag, "mcpwm_generator_set_force_level failed: %s", esp_err_to_name(err));
-        if (err != ESP_OK) {
-            return;
-        }
+        return;
+    }
+}
+
+void Generator::clearLevel(esp_err_t& err) {
+    err = mcpwm_generator_set_force_level(_generator, -1, true);
+    if (err != ESP_OK) {
+        ESP_LOGE(_loggingTag, "mcpwm_generator_set_force_level failed: %s", esp_err_to_name(err));
+        return;
     }
 }

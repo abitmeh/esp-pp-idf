@@ -7,6 +7,7 @@
 
 #pragma once
 
+#include "ADC/Types.hpp"
 #include "ADC/Calibration.hpp"
 
 #include <driver/gpio.h>
@@ -24,10 +25,11 @@ namespace esp {
     namespace adc {
         struct ADCChannelConfig {
             ADCChannelConfig();
-            ADCChannelConfig(adc_channel_t channel, adc_oneshot_chan_cfg_t configuration);
+            ADCChannelConfig(adc_channel_t channel, Attenuation attenuation, BitWidth bitwidth);
 
             adc_channel_t channel;
-            adc_oneshot_chan_cfg_t configuration;
+            Attenuation attenuation;
+            BitWidth bitwidth;
         };
 
         bool operator==(const ADCChannelConfig& a, const ADCChannelConfig& b);
@@ -123,7 +125,11 @@ namespace esp {
             : _adc(adc), _config(config) {
             _handle = adc->_handle;
             _channel = config.channel;
-            err = adc_oneshot_config_channel(_adc->_handle, config.channel, &config.configuration);
+            adc_oneshot_chan_cfg_t channelConfig = {
+                .atten = static_cast<adc_atten_t>(_config.attenuation),
+                .bitwidth = static_cast<adc_bitwidth_t>(_config.bitwidth),
+            };
+            err = adc_oneshot_config_channel(_adc->_handle, config.channel, &channelConfig);
             if (err != ESP_OK) {
                 ESP_LOGE(_loggingTag, "adc_oneshot_config_channel failed: %s", esp_err_to_name(err));
             }
@@ -132,12 +138,16 @@ namespace esp {
         template <ADCCalibrationState calibration>
         ADCOneshotChannel<calibration>::ADCOneshotChannel(ADCOneshotPtr<Calibrated> adc, adc_channel_t channel, esp_err_t& err) requires (calibration == Calibrated) : _adc(adc) {
             _config.channel = channel;
-            _config.configuration.atten = adc->_calibration.value()->_attenuation;
-            _config.configuration.bitwidth = adc->_calibration.value()->_bitwidth;
+            _config.attenuation = adc->_calibration.value()->_attenuation;
+            _config.bitwidth = adc->_calibration.value()->_bitwidth;
             _handle = adc->_handle;
             _channel = channel;
             _calibrationHandle = adc->_calibration.value()->_calibration;
-            err = adc_oneshot_config_channel(_adc->_handle, channel, &_config.configuration);
+            adc_oneshot_chan_cfg_t channelConfig = {
+                .atten = static_cast<adc_atten_t>(_config.attenuation),
+                .bitwidth = static_cast<adc_bitwidth_t>(_config.bitwidth),
+            };
+            err = adc_oneshot_config_channel(_adc->_handle, channel, &channelConfig);
             if (err != ESP_OK) {
                 ESP_LOGE(_loggingTag, "adc_oneshot_config_channel failed: %s", esp_err_to_name(err));
             }
@@ -170,8 +180,8 @@ namespace esp {
                 return chan;
             }
 
-            if (chan->_config.configuration.atten == _calibration.value()->_attenuation &&
-                chan->_config.configuration.bitwidth == _calibration.value()->_bitwidth) {
+            if (chan->_config.attenuation == _calibration.value()->_attenuation &&
+                chan->_config.bitwidth == _calibration.value()->_bitwidth) {
                 return chan;
             }
 

@@ -15,18 +15,18 @@ using namespace mcpwm;
 
 namespace esp::mcpwm {
     IRAM_ATTR bool _onFull(mcpwm_timer_handle_t timerHandle, const mcpwm_timer_event_data_t* eventData, void* userData) {
-        Timer* timer = reinterpret_cast<Timer*>(userData);
-        return timer->_callbacks.onFull(*eventData);
+        auto& [timer, userInfo] = *reinterpret_cast<std::pair<Timer*, void*>*>(userData);
+        return timer->_callbacks.onFull ? static_cast<bool>(timer->_callbacks.onFull(*eventData, userInfo)) : false;
     }
 
     IRAM_ATTR bool _onEmpty(mcpwm_timer_handle_t timerHandle, const mcpwm_timer_event_data_t* eventData, void* userData) {
-        Timer* timer = reinterpret_cast<Timer*>(userData);
-        return timer->_callbacks.onEmpty(*eventData);
+        auto& [timer, userInfo] = *reinterpret_cast<std::pair<Timer*, void*>*>(userData);
+        return timer->_callbacks.onEmpty ? static_cast<bool>(timer->_callbacks.onEmpty(*eventData, userInfo)) : false;
     }
 
     IRAM_ATTR bool _onStop(mcpwm_timer_handle_t timerHandle, const mcpwm_timer_event_data_t* eventData, void* userData) {
-        Timer* timer = reinterpret_cast<Timer*>(userData);
-        return timer->_callbacks.onStop(*eventData);
+        auto& [timer, userInfo] = *reinterpret_cast<std::pair<Timer*, void*>*>(userData);
+        return timer->_callbacks.onStop ? static_cast<bool>(timer->_callbacks.onStop(*eventData, userInfo)) : false;
     }
 }  // namespace esp::mcpwm
 
@@ -37,7 +37,7 @@ Timer::Timer(const TimerConfig& config, esp_err_t& err) : _config(config) {
         .resolution_hz = config.frequency,
         .count_mode = config.countMode,
         .period_ticks = config.period,
-        .intr_priority = config.interuptPriority,
+        .intr_priority = config.interruptPriority,
         .flags = {.update_period_on_empty = config.updatePeriodOnEmpty, .update_period_on_sync = config.updatePeriodOnSync, .allow_pd = config.allowPowerDown}};
 
     err = mcpwm_new_timer(&timerConfig, &_timer);
@@ -84,14 +84,15 @@ void Timer::removeOperator(const OperatorPtr& oper) {
     std::erase(_operators, oper);
 }
 
-void Timer::setEventCallbacks(const EventCallbacks& eventCallbacks, esp_err_t& err) {
+void Timer::setEventCallbacks(const EventCallbacks& eventCallbacks, void* userInfo, esp_err_t& err) {
     mcpwm_timer_event_callbacks_t callbackConfig = {
         .on_full = eventCallbacks.onFull ? _onFull : nullptr,
         .on_empty = eventCallbacks.onEmpty ? _onEmpty : nullptr,
         .on_stop = eventCallbacks.onStop ? _onStop : nullptr,
     };
     _callbacks = eventCallbacks;
-    err = mcpwm_timer_register_event_callbacks(_timer, &callbackConfig, this);
+    _userInfo = std::make_pair(this, userInfo);
+    err = mcpwm_timer_register_event_callbacks(_timer, &callbackConfig, &_userInfo);
     if (err != ESP_OK) {
         ESP_LOGE(_loggingTag, "mcpwm_timer_register_event_callbacks failed: %s", esp_err_to_name(err));
         return;
