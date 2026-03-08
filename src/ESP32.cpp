@@ -148,6 +148,17 @@ GPIOPtr ESP32::gpio(GPIOConfig gpioConfig, esp_err_t& err) {
     return gpio;
 }
 
+std::expected<TimerPtr, esp_err_t> ESP32::timer(const TimerConfig& config) {
+    esp_err_t err = ESP_OK;
+    TimerPtr timer = std::shared_ptr<Timer>(new Timer(config, err));
+    if (err != ESP_OK) {
+        ESP_LOGE(_loggingTag, "ESP32::timer failed: %s", esp_err_to_name(err));
+        return std::unexpected(err);
+    }
+
+    return timer;
+}
+
 std::pair<adc_unit_t, adc_channel_t> ESP32::adcChannelForGPIO(gpio_num_t gpio, esp_err_t& err) {
     adc_unit_t unit = ADC_UNIT_1;
     adc_channel_t channel = ADC_CHANNEL_0;

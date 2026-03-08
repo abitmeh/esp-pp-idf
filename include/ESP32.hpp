@@ -11,6 +11,7 @@
 #include "ADC/Oneshot.hpp"
 #include "GPIO.hpp"
 #include "MCPWM/MCPWM.hpp"
+#include "Timer.hpp"
 
 #include <memory>
 #include <unordered_set>
@@ -42,6 +43,8 @@ namespace esp {
         GPIOPtr gpio(GPIOConfig gpioConfig, esp_err_t& err);
 
         mcpwm::MCPWM& mcpwm() { return _mcpwm; }
+
+        std::expected<TimerPtr, esp_err_t> timer(const TimerConfig& config);
 
         static std::pair<adc_unit_t, adc_channel_t> adcChannelForGPIO(gpio_num_t gpio, esp_err_t& err);
         static gpio_num_t gpioForAdcChannel(adc_unit_t unit, adc_channel_t channel, esp_err_t& err);
